@@ -3,193 +3,39 @@ package com.example.workouttrackerprototype
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.example.workouttrackerprototype.model.Exercise
-import com.example.workouttrackerprototype.model.Workout
+import com.example.workouttrackerprototype.pages.LandingPage
+import com.example.workouttrackerprototype.pages.WorkOutTrackerPrototype
 import com.example.workouttrackerprototype.ui.theme.WorkoutTrackerPrototypeTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             WorkoutTrackerPrototypeTheme {
+
+                var showLandingPage by remember { mutableStateOf(true) }
+
                 Surface(color = MaterialTheme.colors.background) {
-                    WorkOutTrackerPrototype()
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun WorkOutTrackerPrototype() {
-    var name by remember { mutableStateOf("") }
-    var loading by remember { mutableStateOf("") }
-    var reps by remember { mutableStateOf("") }
-    val workout = remember { Workout() }
-    val exerciseList = remember { mutableStateListOf<Exercise>() }
-
-    // State variables to control UI display
-    var showRepsOnly by remember { mutableStateOf(false) }
-    var showAddRepsButton by remember { mutableStateOf(false) }
-    var showDialog by remember { mutableStateOf(false) }
-
-    // Validation Error State Variables
-    var nameError by remember { mutableStateOf(false) }
-    var repsError by remember { mutableStateOf(false) }
-
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxSize()
-    ) {
-        Text("Add an Exercise!", style = MaterialTheme.typography.h6)
-
-        // Conditional Dialog
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                title = { Text("Add More Reps?") },
-                text = { Text("Would you like to add more reps to the last exercise?") },
-                confirmButton = {
-                    Button(onClick = {
-                        showRepsOnly = true
-                        showAddRepsButton = true
-                        showDialog = false
-                    }) {
-                        Text("Yes")
-                    }
-                },
-                dismissButton = {
-                    Button(onClick = {
-                        showRepsOnly = false
-                        showAddRepsButton = true
-                        showDialog = false
-                    }) {
-                        Text("No")
-                    }
-                }
-            )
-        }
-
-        // Show fields based on `showRepsOnly`
-        if (!showRepsOnly) {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it
-                    nameError = false} , // Reset error state on change
-                label = { Text("Exercise Name") },
-                isError = nameError,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            )
-            if (nameError) {
-                Text("Please enter a valid exercise name", color = MaterialTheme.colors.error)
-            }
-
-            OutlinedTextField(
-                value = loading,
-                onValueChange = { loading = it },
-                label = { Text("Loading (kg)") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            )
-        }
-
-        // Reps input field (shown in both cases)
-        OutlinedTextField(
-            value = reps,
-            onValueChange = { reps = it
-                repsError = false  // Reset error state on change
-                            },
-            label = { Text("Reps") },
-            isError = repsError,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp)
-        )
-        if (repsError) {
-            Text("Reps must be greater than 0", color = MaterialTheme.colors.error)
-        }
-
-        // First Button - "Log New Exercise" (only shown if `showRepsOnly` is false)
-        if (!showRepsOnly) {
-            Button(
-                onClick = {
-                    // Validation checks
-                    val repsInt = reps.toIntOrNull()
-                    if (name.isBlank()) {
-                        nameError = true
-                    }
-                    if (repsInt == null || repsInt <= 0) {
-                        repsError = true
-                    }
-
-                    if (!nameError && !repsError) {
-                        val exercise = Exercise(
-                            name = name,
-                            loading = loading.toIntOrNull() ?: 0,
-                            reps = mutableListOf(repsInt)
-                        )
-                        workout.addExercise(exercise)
-                        exerciseList.add(exercise)
-                        name = ""
-                        loading = ""
-                        reps = ""
-
-                        if (exerciseList.size >= 1) {
-                            showDialog = true
-                        }
-                    }
-                },
-                modifier = Modifier.padding(vertical = 8.dp)
-            ) {
-                Text("Log New Exercise!")
-            }
-        }
-
-        // Second Button - "Add More Reps" (conditionally shown if `showAddRepsButton` is true)
-        if (showAddRepsButton) {
-            Button(
-                onClick = {
-                    val repsToAdd = reps.toIntOrNull() ?: 0
-                    if (repsToAdd > 0) {
-                        workout.addRepsToLastExercise(repsToAdd)
-                        exerciseList[exerciseList.lastIndex] = workout.exerciseList.last()
-                        reps = ""
-                        showDialog = true
+                    if (showLandingPage) {
+                        LandingPage(onContinueClicked = {
+                            showLandingPage = false
+                        })
                     } else {
-                        repsError = true
+                        WorkOutTrackerPrototype()
                     }
-                },
-                modifier = Modifier.padding(vertical = 8.dp)
-            ) {
-                Text("Add More Reps to Last Exercise")
+                }
             }
-        }
-
-
-        Spacer(modifier = Modifier.height(16.dp))
-        Text("Exercise Log", style = MaterialTheme.typography.h6)
-
-        exerciseList.forEachIndexed { index, exercise ->
-            Text("${index + 1}. ${exercise.name} - " +
-                    "${if (exercise.loading == 0 || exercise.loading == null) "Body weight" else "${exercise.loading}kg"} " +
-                    "for ${exercise.reps.count()} sets of ${exercise.reps.joinToString(", ")} reps")
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun PreviewWorkOutTrackerPrototype() {
     WorkoutTrackerPrototypeTheme {
         WorkOutTrackerPrototype()
-    }
-}
+    }}
