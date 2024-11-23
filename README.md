@@ -1,4 +1,4 @@
-First iteration of the Android workout tracker app in Kotlin.
+First iteration of frontend for Android workout tracker app in Kotlin.
 
 Currently has landing page and workout tracker.
 
